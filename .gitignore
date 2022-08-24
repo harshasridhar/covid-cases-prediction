@@ -1,3 +1,4 @@
 .dash-ui
 pages/modeling/data/*
 temp/*
+*/__pycache/*
