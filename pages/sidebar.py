@@ -26,7 +26,7 @@ def sidebar():
         dbc.NavItem(dbc.NavLink('EDA', href='/eda', active='exact')),
         dbc.DropdownMenu(children=[
             dbc.DropdownMenuItem("LR", href="/model/linear_regression"),
-            # dbc.DropdownMenuItem("Memory", href="/model/memory")
+            dbc.DropdownMenuItem("Memory", href="/model/memory")
         ], nav=True, in_navbar=True, label="Modeling")
     ])
 

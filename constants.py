@@ -11,7 +11,13 @@ states = {"Andhra Pradesh": "AP", "Arunachal Pradesh": "AR", "Assam": "AS", "Bih
 DATA_LOCATION = {'state': 'data/state_data.csv', 'country': 'data/country_data.csv'}
 DATA_DOWNLOAD_URL = {'state': 'https://raw.githubusercontent.com/datameet/covid19/master/data/mohfw.json',
                      'country': 'https://raw.githubusercontent.com/datameet/covid19/master/data/all_totals.json'}
+SAVED_MODEL_LOCATION = 'models/'
+MULTI_OUTPUT_REGRESSOR = 'MultiOutputRegressor'
+CHAINED_REGRESSOR = 'ChainedRegressor'
+LINEAR_REGRESSION = 'LinearRegression'
+SUPPORT_VECTOR_REGRESSOR = 'SupportVectorRegressor'
 RECURRENT_NEURAL_NETWORK = 'RNN'
 LONG_SHORT_TERM_MEMORY = 'LSTM'
 MEAN_SQUARED_ERROR = 'mean_squared_error'
 ADAM_OPTIMIZER = 'adam'
+

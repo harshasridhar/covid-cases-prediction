@@ -11,8 +11,9 @@ from sklearn.metrics import r2_score, mean_absolute_error as mae
 import numpy as np
 from plotly.subplots import make_subplots
 import plotly.graph_objects as go
+from constants import *
 
-dash.register_page(__name__, path='/model/linear_regression')
+# dash.register_page(__name__, path='/model/linear_regression')
 data = DataUtils.get_country_data().copy()
 data['TimeUnit'] = np.arange(len(data.index))
 data['Lag1'] = data['active_cases'].shift(1).fillna(0)
@@ -40,14 +41,14 @@ def plot_actual_vs_predicted(X_test, y_test, predicted, test=None):
     return fig
 
 
-@callback(
-    Output('result', 'children'),
-    Output('perf', 'figure'),
-    Input('features', 'value'),
-    Input('lr-model-choice', 'value'),
-    Input('base_model_choice', 'value'),
-    Input('lr_train_test', 'n_clicks')
-)
+# @callback(
+#     Output('result', 'children'),
+#     Output('perf', 'figure'),
+#     Input('features', 'value'),
+#     Input('lr-model-choice', 'value'),
+#     Input('base_model_choice', 'value'),
+#     Input('lr_train_test', 'n_clicks')
+# )
 def button_clicked(features, model_choice, base_model_choice, btn):
     output = {}
     if ctx.triggered_id is None or features is None or len(features) == 0:
@@ -55,8 +56,8 @@ def button_clicked(features, model_choice, base_model_choice, btn):
     if ctx.triggered_id == 'lr_train_test':
         X_train, y_train = train[features], train[target]
         X_test, y_test = test[features], test[target]
-        base_model = LinearRegression() if base_model_choice == 'LinearRegression' else SVR(kernel='poly')
-        model = MultiOutputRegressor(base_model) if 'MultiOutputRegressor' == model_choice \
+        base_model = LinearRegression() if base_model_choice == LINEAR_REGRESSION else SVR(kernel='poly')
+        model = MultiOutputRegressor(base_model) if MULTI_OUTPUT_REGRESSOR == model_choice \
             else RegressorChain(base_model)
         model.fit(X_train, y_train)
         predicted = model.predict(X_test)
@@ -67,7 +68,7 @@ def button_clicked(features, model_choice, base_model_choice, btn):
         stats.loc['R2_score'] = r2_score(y_test, predicted, multioutput='raw_values')
         stats.loc['MAE'] = mae(y_test, predicted, multioutput='raw_values')
         eqns = []
-        if base_model_choice == 'SupportVectorRegressor':
+        if base_model_choice == SUPPORT_VECTOR_REGRESSOR:
             print(model.estimators_[0].support_vectors_)
         try:
             for index, target_variable in enumerate(target):
@@ -95,12 +96,12 @@ def button_clicked(features, model_choice, base_model_choice, btn):
 
 layout = html.Div(children=[html.H1('Linear Regression'),
                             dcc.RadioItems(id='lr-model-choice',
-                                           options=['MultiOutputRegressor', 'ChainedRegressor'],
-                                           value='MultiOutputRegressor'),
+                                           options=[MULTI_OUTPUT_REGRESSOR, CHAINED_REGRESSOR],
+                                           value=MULTI_OUTPUT_REGRESSOR),
                             dcc.RadioItems(id='base_model_choice',
-                                           options=['LinearRegression', 'SupportVectorRegressor'],
-                                           value='LinearRegression'),
-                            dcc.Checklist(id='features', options=['TimeUnit', 'Lag1', 'Lag2']),
+                                           options=[LINEAR_REGRESSION, SUPPORT_VECTOR_REGRESSOR],
+                                           value=LINEAR_REGRESSION),
+                            dcc.Checklist(id='features', options=['TimeUnit', 'Lag1']),
                             html.Button('Train And Test', id='lr_train_test'),
                             html.Div(id='result'),
                             dcc.Graph('perf')

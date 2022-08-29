@@ -8,7 +8,7 @@ from constants import *
 from plotly.subplots import make_subplots
 import plotly.graph_objects as go
 
-dash.register_page(__name__, path='/model/memory')
+# dash.register_page(__name__, path='/model/memory')
 sc = MinMaxScaler(feature_range=(0, 1))
 data = DataUtils.get_country_data()
 
@@ -25,11 +25,11 @@ def plot_actual_vs_predicted(predicted, y_test):
     return fig
 
 
-@callback(
-    Output('predictions', 'figure'),
-    Input('model_choice', 'value'),
-    Input('feature', 'value')
-)
+# @callback(
+#     Output('predictions', 'figure'),
+#     Input('model_choice', 'value'),
+#     Input('feature', 'value')
+# )
 def train_test(model_choice, feature):
     if ctx.triggered_id == 'lr_train_test':
         from keras.callbacks import ReduceLROnPlateau
