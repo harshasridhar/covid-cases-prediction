@@ -43,7 +43,7 @@ def display_stats(memory_model_choice, tuned_model, mem_test_model):
             fig.add_trace(Scatter(x=df['TimeUnit'].values, y=df['Actual'].values, name='actual', mode='markers',
                                   legendgroup='actual', marker={'color': 'blue'}, showlegend=col_index == 1), row=1,
                           col=col_index)
-            fig.add_trace(Scatter(x=df['TimeUnit'].values, y=df['Predicted'].values, name='actual', mode='markers',
+            fig.add_trace(Scatter(x=df['TimeUnit'].values, y=df['Predicted'].values, name='predicted', mode='markers',
                                   legendgroup='predicted', marker={'color': 'red'}, showlegend=col_index == 1), row=1,
                           col=col_index)
             col_index += 1

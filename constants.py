@@ -20,4 +20,10 @@ RECURRENT_NEURAL_NETWORK = 'RNN'
 LONG_SHORT_TERM_MEMORY = 'LSTM'
 MEAN_SQUARED_ERROR = 'mean_squared_error'
 ADAM_OPTIMIZER = 'adam'
+SIMPLE_EXPONENTIAL_SMOOTHING = 'Simple Exponential Smoothing'
+DOUBLE_EXPONENTIAL_SMOOTHING = 'Double Exponential Smoothing'
+TRIPLE_EXPONENTIAL_SMOOTHING = 'Triple Exponential Smoothing'
+ARIMA = 'ARIMA'
+SARIMA = 'SARIMA'
+TARGET_COLUMNS = ['active_cases', 'cured', 'death']
 

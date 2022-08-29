@@ -82,6 +82,10 @@ class DataUtils:
             DataUtils.download_data(save_to_data_dir=True, level=level)
         data = pd.read_csv(path, parse_dates=['Date'])
         data['Date'] = pd.to_datetime(data['Date'].dt.date)
+        for col_name in data.select_dtypes([int,float]).keys():
+            indices = data[data[col_name]<0].index
+            if indices is not None and  len(indices) > 0:
+                data.drop(index= indices, inplace=True)
         if 'state' in level and preprocess_data:
             data = data \
                 .groupby('state').apply(DataUtils.__handle_group).reset_index(). \

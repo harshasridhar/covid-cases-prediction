@@ -1,16 +1,23 @@
 from pandas import DataFrame
-from numpy import array, arange, reshape
+from numpy import array, arange, reshape, asarray
 from constants import *
 from pickle import load
 from utils import DataUtils
 from os.path import exists
 from sklearn.preprocessing import MinMaxScaler
 from pickle import dump
+from math import ceil
 
 X_test, y_test = None, None
 
 
 class ModelUtils:
+
+    @staticmethod
+    def get_data_for_time_series_models(target_column: str):
+        data = DataUtils.get_country_data()
+        train, test = ModelUtils.train_test_split(data[target_column], test_size=0.20)
+        return train, test
 
     @staticmethod
     def get_data_for_linear_model(features: list, target_columns: list, lag_data: bool = False):
@@ -149,10 +156,13 @@ class ModelUtils:
     def get_pickled_model(model_name: str, features: list, base_model: str = None,
                           get_tuned_model: bool = False) -> object:
         filename = ''
-        if base_model is None and features is None:
+        if model_name in [SIMPLE_EXPONENTIAL_SMOOTHING, DOUBLE_EXPONENTIAL_SMOOTHING, TRIPLE_EXPONENTIAL_SMOOTHING, ARIMA, SARIMA]:
+            filename = 'models/{}_{}.model'.format(model_name, features[0])
+        elif base_model is None and features is None:
             filename = 'models/{}{}.model'.format(model_name, '_tuned' if get_tuned_model else '')
         elif base_model is None:
             filename = 'models/{}_[{}].model'.format(model_name, ','.join(features))
         else:
             filename = 'models/{}_{}_[{}].model'.format(model_name, base_model, ','.join(features))
+        print('Filename:',filename, ' status:',exists(filename))
         return load(open(filename, 'rb'))
