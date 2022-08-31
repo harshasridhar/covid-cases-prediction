@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import seaborn as sns
 from sklearn.preprocessing import MinMaxScaler
 from utils import DataUtils, ModelUtils
@@ -37,13 +38,14 @@ def get_metrics(y_true, predicted, is_multioutput: bool = False):
 
 def run_model(model_name: str, features: list, base_model: str = None, save_model: bool = False):
     filename = ''
+    orignal_feature_list = features.copy()
     if base_model is None:
         filename = 'models/{}_[{}].model'.format(model_name, ','.join(features))
     else:
         filename = 'models/{}_{}_[{}].model'.format(model_name, base_model, ','.join(features))
     model = None
     if model_name in [MULTI_OUTPUT_REGRESSOR, CHAINED_REGRESSOR]:
-        base_model_obj = LinearRegression() if base_model == LINEAR_REGRESSION else SVR()
+        base_model_obj = LinearRegression() if base_model == LINEAR_REGRESSION else SVR(kernel='poly')
         model = MultiOutputRegressor(base_model_obj) if model_name == MULTI_OUTPUT_REGRESSOR else RegressorChain(
             base_model_obj)
     target_columns = ['cured', 'death', 'active_cases']
@@ -52,6 +54,13 @@ def run_model(model_name: str, features: list, base_model: str = None, save_mode
     model.fit(X_train, y_train)
     time_taken = time() - start_time
     predictions = model.predict(X_test)
+    eqns=[]
+    if isinstance(model, MultiOutputRegressor) and isinstance(base_model_obj, LinearRegression):
+        for ind, col in enumerate(target_columns):
+            eqn = col + ' = '
+            for coef, col in zip(model.estimators_[ind].coef_, X_train.columns):
+                eqn += '{}{} * {} '.format('+' if coef > 0 else '', round(coef, 4), col)
+            eqns.append(eqn)
     r2 = list(map(partial(round, ndigits=3), r2_score(y_test, predictions, multioutput='raw_values')))
     MAE = list(map(partial(round, ndigits=3), mae(y_test, predictions, multioutput='raw_values')))
     MSE = list(map(partial(round, ndigits=3), mse(y_test, predictions, multioutput='raw_values')))
@@ -60,12 +69,13 @@ def run_model(model_name: str, features: list, base_model: str = None, save_mode
     # sns.lineplot(arange(len(y_test)), [row[2] for row in predictions], color='red', label='Predicted')
     # plt.show()
     global index
-    stats.loc[index] = [model_name, base_model, ','.join(features), r2, MAE, MSE]
+    stats.loc[index] = [model_name, base_model, ','.join(orignal_feature_list), r2, MAE, MSE]
     index += 1
     print(filename)
     print(r2)
     if save_model:
         dump({'model': model,
+              # 'equations': eqns,
               'time_taken': time_taken,
               'r2_score': r2,
               'mse': MSE,
@@ -88,9 +98,11 @@ run_model(CHAINED_REGRESSOR, ['TimeUnit', 'Lag1'], SUPPORT_VECTOR_REGRESSOR, Tru
 run_model(CHAINED_REGRESSOR, ['TimeUnit'], SUPPORT_VECTOR_REGRESSOR, True)
 run_model(CHAINED_REGRESSOR, ['Lag1'], SUPPORT_VECTOR_REGRESSOR, True)
 
-# print(stats.to_latex(index=False))
-# dump(stats,open('stats.pkl','wb'))
+print(stats.to_latex(index=False))
+dump(stats,open('stats.pkl','wb'))
 
+memory_model_stats = pd.DataFrame(columns=['Model', 'R2_Score', ' MAE', 'MSE'])
+memory_model_stats.set_index('Model', inplace=True)
 
 def train_and_tune(model_name: str, save_model: bool = False):
     import tensorflow as tf
@@ -126,12 +138,12 @@ def train_and_tune(model_name: str, save_model: bool = False):
             'MAE': mae(y_test, predicted, multioutput='raw_values'),
             'MSE': mse(y_test, predicted, multioutput='raw_values')
         }, open('models/' + model_name + '.model', 'wb'))
-    fig, ax = plt.subplots(1, 3)
-    for i in range(3):
-        sns.lineplot(arange(len(y_test)), [row[i] for row in y_test], color='blue', label='Actual', ax=ax[i])
-        sns.lineplot(arange(len(y_test)), [row[i] for row in predicted], color='red', label='Predicted', ax=ax[i])
-        ax[i].set_title(['active_cases', 'cured', 'death'][i])
-    plt.show()
+    # fig, ax = plt.subplots(1, 3)
+    # for i in range(3):
+    #     sns.lineplot(arange(len(y_test)), [row[i] for row in y_test], color='blue', label='Actual', ax=ax[i])
+    #     sns.lineplot(arange(len(y_test)), [row[i] for row in predicted], color='red', label='Predicted', ax=ax[i])
+    #     ax[i].set_title(['active_cases', 'cured', 'death'][i])
+    # plt.show()
     print(run_stats)
 
     def build(hyperparams):
@@ -164,12 +176,17 @@ def train_and_tune(model_name: str, save_model: bool = False):
         'MAE': mae(y_test, predicted, multioutput='raw_values'),
         'MSE': mse(y_test, predicted, multioutput='raw_values')
     }
+    r2 = list(map(partial(round, ndigits=3), r2_score(y_test, predicted, multioutput='raw_values')))
+    MAE = list(map(partial(round, ndigits=3), mae(y_test, predicted, multioutput='raw_values')))
+    MSE = list(map(partial(round, ndigits=3), mse(y_test, predicted, multioutput='raw_values')))
+
+    memory_model_stats.loc[model_name] = [r2, MAE, MSE]
     print(run_stats['base']['R2_Score'], "\n", run_stats['tuned']['R2_Score'])
-    fig, ax = plt.subplots(1, 3)
-    for i in range(3):
-        sns.lineplot(arange(len(y_test)), [row[i] for row in y_test], color='blue', label='Actual', ax=ax[i])
-        sns.lineplot(arange(len(y_test)), [row[i] for row in predicted], color='red', label='Predicted', ax=ax[i])
-    plt.show()
+    # fig, ax = plt.subplots(1, 3)
+    # for i in range(3):
+    #     sns.lineplot(arange(len(y_test)), [row[i] for row in y_test], color='blue', label='Actual', ax=ax[i])
+    #     sns.lineplot(arange(len(y_test)), [row[i] for row in predicted], color='red', label='Predicted', ax=ax[i])
+    # plt.show()
     if save_model:
         dump({
             'model': tuned_model,
@@ -183,6 +200,8 @@ def train_and_tune(model_name: str, save_model: bool = False):
 
 train_and_tune(RECURRENT_NEURAL_NETWORK, True)
 train_and_tune(LONG_SHORT_TERM_MEMORY, True)
+print(memory_model_stats.to_latex())
+dump(memory_model_stats,open('memory_model_stats.pkl','wb'))
 
 
 def run_time_series_models(model_name: str, target_column: str, trend: str = 'mul', seasonal: str = 'mul', seasonal_periods: int = 10, save_model: bool = False):
@@ -236,4 +255,8 @@ for model in [SIMPLE_EXPONENTIAL_SMOOTHING, DOUBLE_EXPONENTIAL_SMOOTHING, TRIPLE
         except Exception as e:
             print('Exception OCCURED',str(e))
 
+run_time_series_models(DOUBLE_EXPONENTIAL_SMOOTHING, target_column='cured', trend='add', save_model=True)
+run_time_series_models(DOUBLE_EXPONENTIAL_SMOOTHING, target_column='death', trend='add', save_model=True)
+run_time_series_models(TRIPLE_EXPONENTIAL_SMOOTHING, target_column='cured', save_model=True,trend='add', seasonal='add')
+run_time_series_models(TRIPLE_EXPONENTIAL_SMOOTHING, target_column='death', save_model=True,trend='add', seasonal='add')
 print(success)

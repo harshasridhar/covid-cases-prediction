@@ -14,9 +14,9 @@ class DataUtils:
     data = None
 
     @staticmethod
-    def get_state_data():
+    def get_state_data(preprocess_data: bool = True):
         if DataUtils.state_data is None:
-            DataUtils.state_data = DataUtils.read_data(preprocess_data=True)
+            DataUtils.state_data = DataUtils.read_data(preprocess_data=preprocess_data)
         return DataUtils.state_data
 
     @staticmethod

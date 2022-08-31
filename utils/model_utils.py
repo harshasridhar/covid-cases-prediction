@@ -25,9 +25,12 @@ class ModelUtils:
         if not exists('models/linear_data.pkl'):
             data = DataUtils.get_country_data().copy()
             data['TimeUnit'] = arange(data.shape[0])
-            data = data.assign(active_cases_lag=data['active_cases'].diff().fillna(0).values,
-                               cured_lag=data['cured'].diff().fillna(0).values,
-                               death_lag=data['death'].diff().fillna(0).values)
+            data = data.assign(active_cases_lag=data['active_cases'].shift(-1).fillna(0).values,
+                               cured_lag=data['cured'].shift(-1).fillna(0).values,
+                               death_lag=data['death'].shift(-1).fillna(0).values)
+            data['active_cases'] = data['active_cases'].diff().fillna(0)
+            data['cured'] = data['cured'].diff().fillna(0)
+            data['death'] = data['death'].diff().fillna(0)
             train, test = ModelUtils.train_test_split(data, test_size=0.25)
             if 'Lag1' in features:
                 features.remove('Lag1')
@@ -47,8 +50,11 @@ class ModelUtils:
         else:
             linear_data = load(open('models/linear_data.pkl', 'rb'))
             data_type = 'original' if 'Lag1' not in features else 'lag1'
-            X_train, y_train = linear_data['X_train'][data_type], linear_data['y_train']
-            X_test, y_test = linear_data['X_test'][data_type], linear_data['y_test']
+            if 'Lag1' in features:
+                features.remove('Lag1')
+                features.extend([feature + '_lag' for feature in target_columns])
+            X_train, y_train = linear_data['X_train'][data_type][features], linear_data['y_train']
+            X_test, y_test = linear_data['X_test'][data_type][features], linear_data['y_test']
         return X_train, y_train, X_test, y_test
 
     @staticmethod

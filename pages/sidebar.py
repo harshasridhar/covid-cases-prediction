@@ -27,7 +27,8 @@ def sidebar():
         dbc.DropdownMenu(children=[
             dbc.DropdownMenuItem("LR", href="/model/linear_regression"),
             dbc.DropdownMenuItem("Memory", href="/model/memory"),
-            dbc.DropdownMenuItem("TimeSeries", href="/model/time_series")
+            dbc.DropdownMenuItem("TimeSeries", href="/model/time_series"),
+            dbc.DropdownMenuItem("Epidemiological Models", href="/models/epidemiological_models")
         ], nav=True, in_navbar=True, label="Modeling")
     ])
 

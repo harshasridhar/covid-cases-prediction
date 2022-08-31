@@ -15,6 +15,7 @@ def log(message, extra={}):
     print(str({'time': time(), 'message': message, 'extra': extra}))
 
 @callback(
+    Output('ann_models_result', 'children'),
     Output('mem_model_stats', 'figure'),
     Input('memory_model_choice', 'value'),
     Input('tuned_model', 'value'),
@@ -24,10 +25,13 @@ def display_stats(memory_model_choice, tuned_model, mem_test_model):
     global n_clicks
     log('Here')
     if mem_test_model and mem_test_model > n_clicks:
+        elems = []
         n_clicks = mem_test_model
         saved_model = ModelUtils.get_pickled_model(memory_model_choice,features=None, get_tuned_model=not tuned_model)
         log('Model Retrieved')
         model = saved_model['model']
+        for key in saved_model.keys():
+            elems.append(html.H3(key + ': ' + str(saved_model[key])))
         saved_model = None
         sc, X_train, y_train, X_test, y_test = ModelUtils.get_data_for_memory_based_model()
         log('Retrieved Data')
@@ -47,8 +51,8 @@ def display_stats(memory_model_choice, tuned_model, mem_test_model):
                                   legendgroup='predicted', marker={'color': 'red'}, showlegend=col_index == 1), row=1,
                           col=col_index)
             col_index += 1
-        return fig
-    return {}
+        return elems, fig
+    return {}, {}
 
 
 layout = html.Div(children=[
@@ -57,5 +61,6 @@ layout = html.Div(children=[
                    value=RECURRENT_NEURAL_NETWORK),
     dcc.Checklist(id='tuned_model', options=['Tuned Model']),
     html.Button('Test Model', id='mem_test_model'),
+    html.Div(id='ann_models_result'),
     dcc.Graph('mem_model_stats')
 ])

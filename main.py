@@ -8,7 +8,7 @@ app = Dash(__name__,
            external_stylesheets=["https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css"])
 
 app.layout = html.Div([
-    html.H1('Predicting the number of COVID cases in India'),
+    html.H1('Modeling the spread of COVID-19 in India'),
     dbc.Row([sidebar()]),
     dbc.Row([dash.page_container])
 ])

@@ -7,7 +7,6 @@ from plotly.subplots import make_subplots
 from numpy import arange
 from pandas import DataFrame
 
-
 dash.register_page(__name__, path='/model/linear_regression')
 
 
@@ -29,6 +28,7 @@ def get_actual_vs_predicted_plot(actual: DataFrame, predicted):
 
 
 @callback(
+    Output('linear_model_details', 'children'),
     Output('test_stats', 'figure'),
     Input('model_choice', 'value'),
     Input('base_model_choice', 'value'),
@@ -37,16 +37,22 @@ def get_actual_vs_predicted_plot(actual: DataFrame, predicted):
 )
 def test_model(model_choice, base_model_choice, features, test_model):
     if ctx.triggered_id == 'test_model':
+        elems=[]
         features = sorted(features, reverse=True)
         saved_model = ModelUtils.get_pickled_model(model_choice, features, base_model_choice)
+        print(saved_model.keys())
+        for key in saved_model.keys():
+            elems.append(html.H3(key+': '+str(saved_model[key])))
         model = saved_model['model']
-        X_train, y_train, X_test, y_test = ModelUtils.get_data_for_linear_model(features, ['active_cases','cured','death'])
+        X_train, y_train, X_test, y_test = ModelUtils.get_data_for_linear_model(features,
+                                                                                ['active_cases', 'cured', 'death'])
         predictions = model.predict(X_test)
-        return get_actual_vs_predicted_plot(y_test, predictions)
-    return {}
+        return elems, get_actual_vs_predicted_plot(y_test, predictions)
+    return {}, {}
 
 
 layout = html.Div(children=[
+    html.H2('Linear Models'),
     dcc.RadioItems(id='model_choice',
                    options=[MULTI_OUTPUT_REGRESSOR, CHAINED_REGRESSOR],
                    value=MULTI_OUTPUT_REGRESSOR),
@@ -56,5 +62,6 @@ layout = html.Div(children=[
     dcc.Checklist(id='features',
                   options=['TimeUnit', 'Lag1']),
     html.Button('Test Model', id='test_model'),
+    html.Div(id='linear_model_details'),
     dcc.Graph('test_stats')
 ])
